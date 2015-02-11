@@ -7,10 +7,11 @@ import org.opencv.core.Mat;
 
 class InterpolateDemo {
   public void run() {
-    VideoCapture vc = loadVideo("/resources/videos/smw.mp4");
+    VideoCapture vc = loadVideo("/resources/videos/smw.avi");
     Mat frame = new Mat();
-    vc.read(frame);
-    //showFrame(frame);
+    for(int i = 0; i < 165; i++) vc.read(frame);
+    showFrame(frame);
+    vc.release();
   }
   
   private void showFrame(Mat frame) {
