@@ -8,15 +8,24 @@ import org.opencv.core.Mat;
 import javax.media.MediaLocator;
 
 class InterpolateDemo {
+  
+  private enum IType {
+      FIRST_FRAME, ALPHA;
+  }
+  
+  public Mat firstFrame;
+  
   public void run() {
     
     final int START_VIDEO = 100, END_VIDEO = 200;
+    final IType iType = IType.ALPHA;
           
     VideoCapture vc = loadVideo("/resources/videos/bbt.avi");
     Mat oldFrame = new Mat(), newFrame = new Mat(), tempFrame;
     Vector fileList = new Vector();
     vc.read(newFrame);
-        
+    firstFrame = newFrame.clone();
+    
     for(int i = 0; i < END_VIDEO; i++) {
         
         tempFrame = oldFrame;
@@ -26,7 +35,7 @@ class InterpolateDemo {
         vc.read(newFrame);
         if(i < START_VIDEO) continue;
 
-        Mat iFrame = interpolateFrames(oldFrame, newFrame);
+        Mat iFrame = interpolateFrames(iType, oldFrame, newFrame);
         
         if(i == START_VIDEO) {
             showExamples(oldFrame, newFrame, iFrame);
@@ -58,9 +67,16 @@ class InterpolateDemo {
     vc.release();
   }
   
-  private Mat interpolateFrames(Mat oldFrame, Mat newFrame) {
+  private Mat interpolateFrames(IType iType, Mat oldFrame, Mat newFrame) {
       Mat iFrame = new Mat();
-      Core.addWeighted(oldFrame, 0.5, newFrame, 0.5, 1, iFrame);
+      
+      switch(iType) {
+          case FIRST_FRAME: iFrame = firstFrame;
+                            break;
+          case ALPHA:       Core.addWeighted(oldFrame, 0.5, newFrame, 0.5, 1, iFrame);
+                            break;
+      }
+      
       return iFrame;
   }
   
