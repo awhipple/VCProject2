@@ -13,14 +13,34 @@ class InterpolateDemo {
     final int START_VIDEO = 100, END_VIDEO = 200;
           
     VideoCapture vc = loadVideo("/resources/videos/bbt.avi");
-    Mat frame = new Mat();
+    Mat oldFrame = new Mat(), newFrame = new Mat(), tempFrame;
     Vector fileList = new Vector();
+    vc.read(newFrame);
+        
     for(int i = 0; i < END_VIDEO; i++) {
-        vc.read(frame);
+        
+        tempFrame = oldFrame;
+        oldFrame = newFrame;
+        newFrame = tempFrame;
+        
+        vc.read(newFrame);
         if(i < START_VIDEO) continue;
-        String fileName = "out/images/" + i + ".jpg";
+
+        Mat iFrame = interpolateFrames(oldFrame, newFrame);
+        
+        if(i == START_VIDEO) {
+            showExamples(oldFrame, newFrame, iFrame);
+        }
+
+        String fileName;
+        
+        fileName = "out/images/" + (2*i) + ".jpg";
         fileList.add(fileName);
-        showFrame(frame, fileName);
+        showFrame(iFrame, fileName);
+        
+        fileName = "out/images/" + (2*i+1) + ".jpg";
+        fileList.add(fileName);
+        showFrame(newFrame, fileName);
     }
     JpegImagesToMovie imagesToMovie = new JpegImagesToMovie();
     MediaLocator oml;
@@ -30,7 +50,7 @@ class InterpolateDemo {
         System.exit(0);
     }
     try {
-        imagesToMovie.doIt(frame.width(), frame.height(), 48, fileList, oml);
+        imagesToMovie.doIt(newFrame.width(), newFrame.height(), 48, fileList, oml);
     } catch(Exception ex) {
         System.out.println("Error saving video: " + ex.getMessage());
     }
@@ -38,10 +58,22 @@ class InterpolateDemo {
     vc.release();
   }
   
+  private Mat interpolateFrames(Mat oldFrame, Mat newFrame) {
+      Mat iFrame = new Mat();
+      Core.addWeighted(oldFrame, 0.5, newFrame, 0.5, 1, iFrame);
+      return iFrame;
+  }
+  
   private void showFrame(Mat frame, String fileName) {
       Highgui.imwrite(fileName, frame);
   }
   
+  private void showExamples(Mat oldFrame, Mat newFrame, Mat iFrame) {
+      showFrame(oldFrame, "out/a-old.png");
+      showFrame(newFrame, "out/b-new.png");
+      showFrame(iFrame, "out/c-int.png");
+  }
+      
   private VideoCapture loadVideo(String fileName) {
     String inputVideoFileName = getClass().getResource(fileName).getPath();
     if(inputVideoFileName.startsWith("/", 0)) {
